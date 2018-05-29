@@ -34,10 +34,8 @@ export default {
         return res.json()
       })
       .then(response=>{
-        console.log(response);
         if(response.code==0){
           this.poiInfo=response.data.poi_info;
-          console.log(this.poiInfo);
         }
       })
   }

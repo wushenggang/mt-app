@@ -14,7 +14,6 @@
           </p>
         </li>
 
-
         <li
           class="menu-item"
           :class="{'current':currentIndex === index + 1}"
@@ -25,6 +24,9 @@
             <img class="icon" :src="item.icon" v-if="item.icon">
             {{item.name}}
           </p>
+          <i class="num" v-show="calculateCount(item.spus)">
+            {{calculateCount(item.spus)}}
+          </i>
         </li>
       </ul>
     </div>
@@ -57,25 +59,39 @@
                     <span class="unit">/{{food.unit}}</span>
                   </p>
                 </div>
+              <div class="cartcontrol-wrapper">
+                <app-cart-control :food="food"></app-cart-control>
+              </div>
             </li>
           </ul>
         </li>
       </ul>
     </div>
+
+    <!-- 购物车 -->
+
+    <app-shopcart :poiInfo="poiInfo" :selectFoods="selectFoods"></app-shopcart>
+
   </div>
+
+
 </template>
 
 <script>
   import BScroll from 'better-scroll'
+  import Shopcart from '../shopcart/Shopcart'
+  import CartControl from '../cartcontrol/CartControl'
   export default {
     data(){
       return {
         container:{},
         goods:[],
+        poiInfo:{},
         listHeight:[],
         menuScroll:{},
         foodScroll:{},
-        scrollY:0
+        scrollY:0,
+        selectFood:{}
       }
     },
     //计算属性是不能够接受参数的
@@ -84,9 +100,12 @@
         return "background-image:url("+imgName+");"
       },
       initScroll(){
-        this.menuScroll=new BScroll(this.$refs.menuScroll)
+        this.menuScroll=new BScroll(this.$refs.menuScroll,{
+          click:true
+        })
         this.foodScroll=new BScroll(this.$refs.foodScroll,{
-          probeType:3
+          probeType:3,
+          click:true
         })
 
         //foodScroll 监听事件
@@ -113,12 +132,20 @@
 
       },
       selectMenu(index){
-        // console.log(index)
         let foodlist = this.$refs.foodScroll.getElementsByClassName("food-list-hook")
         let element = foodlist[index]
         // console.log(element)
         // 滚动到对应元素的位置
         this.foodScroll.scrollToElement(element,250)
+      },
+      calculateCount(spus){
+        let count = 0
+        spus.forEach((food) => {
+          if(food.count > 0){
+            count += food.count
+          }
+        })
+        return count
       },
     },
     created(){
@@ -130,7 +157,7 @@
           if(response.code==0){
             this.container=response.data.container_operation_source
             this.goods=response.data.food_spu_tags
-
+            this.poiInfo=response.data.poi_info
             //DOM已经更新
             this.$nextTick(()=>{
               //执行滚动方法
@@ -160,6 +187,21 @@
         }
         return 0
       },
+      selectFoods(){
+        let foods=[]
+        this.goods.forEach((myfoods)=>{
+          myfoods.spus.forEach((food)=>{
+            if(food.count>0){
+              foods.push(food)
+            }
+          })
+        })
+        return foods
+      }
+    },
+    components:{
+      "app-shopcart":Shopcart,
+      "app-cart-control":CartControl
     }
   }
 </script>
